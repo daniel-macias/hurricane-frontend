@@ -13,7 +13,7 @@ import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import KML from "ol/format/KML";
+import { GeoJSON } from "ol/format";
 import { fromLonLat } from "ol/proj";
 
 const map = ref(null);
@@ -22,24 +22,30 @@ defineOptions({
   name: "IndexPage",
 });
 
-// Function to add hurricane data to the map
-async function addHurricaneLayers(mapInstance) {
-  const response = await axios.get("http://localhost:3000/tropical");
-  response.data.forEach((hurricane) => {
-    if (hurricane.type != "WindSpeedProbability") {
-      hurricane.links.forEach((link) => {
-        if (link.href.endsWith(".kmz")) {
-          const vectorLayer = new VectorLayer({
-            source: new VectorSource({
-              url: link.href,
-              format: new KML(),
+// Function to dynamically add storm layers to the map
+async function addStormLayers(mapInstance) {
+  try {
+    const response = await axios.get("http://localhost:3000/storms");
+    if (response.data && Array.isArray(response.data.data)) {
+      response.data.data.forEach(async (storm) => {
+        const detailResponse = await axios.get(
+          `http://localhost:3000/storms/${storm.id}/geoInfo`
+        );
+        const stormLayer = new VectorLayer({
+          source: new VectorSource({
+            features: new GeoJSON().readFeatures(detailResponse.data, {
+              featureProjection: "EPSG:3857",
             }),
-          });
-          mapInstance.addLayer(vectorLayer);
-        }
+          }),
+        });
+        mapInstance.addLayer(stormLayer);
       });
+    } else {
+      console.error("Data received is not an array:", response.data);
     }
-  });
+  } catch (error) {
+    console.error("Failed to load storm data:", error);
+  }
 }
 
 onMounted(() => {
@@ -55,7 +61,7 @@ onMounted(() => {
       zoom: 6,
     }),
   });
-  addHurricaneLayers(map.value);
+  addStormLayers(map.value);
 });
 </script>
 
