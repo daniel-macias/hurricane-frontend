@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, inject, watch } from "vue";
 import axios from "axios";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -18,9 +18,21 @@ import { fromLonLat } from "ol/proj";
 import { Style, Stroke } from "ol/style";
 
 const map = ref(null);
+const showHurricanes = inject("showHurricanes"); // Inject the shared state
+const hurricaneLayers = ref([]);
 
 defineOptions({
   name: "IndexPage",
+});
+// Adjust visibility of all hurricane layers
+function updateHurricaneVisibility() {
+  hurricaneLayers.value.forEach((layer) => {
+    layer.setVisible(showHurricanes.value);
+  });
+}
+
+watch(showHurricanes, () => {
+  updateHurricaneVisibility();
 });
 
 // Function to dynamically add storm layers to the map
@@ -58,6 +70,7 @@ async function addStormLayers(mapInstance) {
           },
         });
         mapInstance.addLayer(stormLayer);
+        hurricaneLayers.value.push(stormLayer); // Add the layer to the hurricaneLayers list
       });
     } else {
       console.error("Data received is not an array:", response.data);
