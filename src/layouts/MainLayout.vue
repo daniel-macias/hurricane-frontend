@@ -11,7 +11,7 @@
           @click="toggleLeftDrawer"
         />
         <q-toolbar-title> Cuculcan </q-toolbar-title>
-        <div>Quasar v{{ $q.version }}</div>
+        <div>By Daniel Macías</div>
       </q-toolbar>
     </q-header>
 

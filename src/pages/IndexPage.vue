@@ -15,6 +15,7 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { GeoJSON } from "ol/format";
 import { fromLonLat } from "ol/proj";
+import { Style, Stroke } from "ol/style";
 
 const map = ref(null);
 
@@ -37,6 +38,24 @@ async function addStormLayers(mapInstance) {
               featureProjection: "EPSG:3857",
             }),
           }),
+          style: function (feature) {
+            const geometryType = feature.getGeometry().getType();
+            const properties = feature.getProperties();
+            console.log(`Feature Type: ${geometryType}`);
+            console.log(`Properties:`, properties);
+            // Basic styling based on the feature type
+            return new Style({
+              stroke: new Stroke({
+                color: properties.color || "#ffcc33", // Use property color or a default one
+                width: 4,
+                lineCap: "round", // Makes the ends of the lines rounded
+                lineJoin: "bevel", // Makes the joins between lines beveled
+                lineDash: [15, 5], // Dash pattern: 15 pixels filled, 5 pixels empty
+                lineDashOffset: 2, // Starts the dash pattern with an offset
+                opacity: 0.75, // Semi-transparent
+              }),
+            });
+          },
         });
         mapInstance.addLayer(stormLayer);
       });
